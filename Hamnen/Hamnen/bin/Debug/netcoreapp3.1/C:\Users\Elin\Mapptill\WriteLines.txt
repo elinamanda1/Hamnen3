@@ -1,0 +1,3 @@
+Totalvikt av alla båtar i hamnen: 29743kg
+Antal lediga platser: 51
+Medeltal av båtarnas Maxhastighet(Avrundat): 14 knop

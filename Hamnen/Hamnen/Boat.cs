@@ -17,6 +17,8 @@ namespace Hamnen
         public int Weight { get; set; }
         public int MaxSpeed { get; set; }
         public double Value { get; set; }
+        public bool HasBeenLoweredToday { get; set; }
+        public bool Info = false;
 
         static Random random = new Random();
 

@@ -29,9 +29,10 @@ namespace Hamnen
             return false;         
            
         }
-        public void DaysLeftInHarbor(Boat boat)
+        public void MakeNull(Dock dock)
         {
-            
+            dock.Boats[0] = null;
+            dock.Boats[1] = null;
         }
 
        

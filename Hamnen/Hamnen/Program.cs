@@ -12,40 +12,51 @@ namespace Hamnen
         static List<Dock> Docks = new List<Dock>(64);
         static List<Boat> RejectedBoats = new List<Boat>();
         static Random random = new Random();
-      
+        
+
         static void Main(string[] args)
         {
             CreateDocks(); //skapar 64 platser.
 
+           
             while (true)
             {
                 //Varje sak som händer i den här loopen kommer hända en gång per dag
 
+                LowerDaysInHarbor(); //denna metod ska gå igenom alla båtar i hamnen om dom finns och ta bort -1 dag i DaysInHarbor per båt.
+                ResetHasBeenLoweredToday(); //Går igenom alla båtarna i hamnen och sätter "hasBeenLoweredToday" == false
+                RemoveBoats();//när DaysInHarbor är 0 Så tas de bort i denna metod.
                 
-                //RemoveBoats(); //Denna metod ska kolla vilka båtar som ska bort¨
                 PaintScreen();
 
+                
                 var boats = CreateFiveMoreBoats(); //skapar 5 nya båtar
-
+                 
                 foreach (var boat in boats) ///Skickar in en båt i taget
                 {
-                    if (boat is RowBoat)//Olika metoder för o lägga till roddbåtar och resterande.
+                    if (boat is RowBoat)//Olika metoder för o lägga till roddbåtar och resterande
                     {
-                        FindFreeSpotRowBoat(boat as RowBoat);
+                       FindFreeSpotRowBoat(boat as RowBoat);
                     }
-                    else 
+                    else
                     {
                         int spotIndex = FindFreeSpotAllBoats(boat.Space);
+                        if(spotIndex > 80) // Eftersom att den returnerar 100 om det ej finns plats så valde jag bara ngt tal över 63, så om den alltså egentligen
+                            //är mer än (index) 63 så kommer den ej gå vidare till AddBoatTo Dock och istället lägga till båten i RejetedBoats
+                        {
+                            RejectedBoats.Add(boat);
+                            break;
+                        }
                         AddBoatToDock(spotIndex, boat);
 
-                    }
-                }
+                    }     
+                  }
 
                 PaintHarbor();
 
                 //spara i fil
 
-                Console.WriteLine($"Dag: {day}\n\nPress any key to switch to the next day");
+                Console.WriteLine($"Dag: {day}\n\nPress any key to switch to the next day\n");
                 HarborInfo();
                 Console.ReadKey();
                 day++;
@@ -53,6 +64,8 @@ namespace Hamnen
                 Console.Clear();
             }
         }
+
+        
 
         private static void CreateDocks()
         {
@@ -64,39 +77,60 @@ namespace Hamnen
             }
         }
 
-      
-
-        /*private static void RemoveBoats() //Ändra, funkar ej mnull
+        private static void LowerDaysInHarbor()
         {
-            int a;
-           for(int i = 0; i < Docks.Count; i++)
+           
+
+            foreach (Dock dock in Docks)
             {
                 
-                if(Docks[i] != null)
+                foreach (Boat boat in dock.Boats) //kollar en halvplats 
                 {
                     
-                    Console.WriteLine("Om dock inte är okänt värde så");
-                    for(int y = 1; y < Docks[i].Boats.Length; y++)
+                    if(boat != null) //om boatplatsen inte är null
                     {
-                        Console.WriteLine("Inne in i båtarrayen");
-                        a = Docks[i].Boats[y].DaysInHarbor;
-                        //Console.WriteLine("Antal dagar kvar:" + Docks[i].Boats[y].DaysInHarbor);
-
-                        if(Docks[i].Boats != null)
+                        if(boat.HasBeenLoweredToday == false)
                         {
-                            if (Docks[i].Boats[y] == null)
-                            {
-                                Console.WriteLine("Objekt sätts till null?");
-                                Docks[i].Boats[y] = null;
-                                Console.WriteLine();
-                            }
+                            
+                            boat.DaysInHarbor--;
+                            boat.HasBeenLoweredToday = true;
                         }
-                      
                     }
                 }
             }
-        }*/
-        
+        }
+
+        private static void ResetHasBeenLoweredToday()
+        {
+            foreach(Dock dock in Docks)
+            {
+                foreach(Boat boat in dock.Boats)
+                {
+                    if(boat != null)
+                    {
+                        boat.HasBeenLoweredToday = false;
+                    }      
+                }
+            }
+        }
+
+        private static void RemoveBoats()
+        {
+            foreach(Dock dock in Docks)
+            {
+                foreach(Boat boat in dock.Boats)
+                {
+                    if(boat != null)
+                    {
+                        if(boat.DaysInHarbor == 0)
+                        {
+                            dock.MakeNull(dock);
+                        }
+                       
+                    }
+                }
+            }
+        }
 
         private static void PaintScreen()
         {
@@ -180,6 +214,7 @@ namespace Hamnen
         }
         private static void AddBoatToDock(int spot, Boat boat)//rätt sista index och båten.
         {
+        
             int a = spot - boat.Space + 1; //Tar ut första lediga index 
 
             for (int i = 0; i < Docks.Count; i++)
@@ -207,24 +242,89 @@ namespace Hamnen
             foreach (var dock in Docks)
             {
                 Console.Write($"{dock.Spot}");
+
                 foreach (Boat boat in dock.Boats)
                 {
                     Console.WriteLine(boat);
-
+                  
                     if (!(boat is RowBoat))
                     {
                         break;
                     }
                 }
-
-
             }
+
 
         }
         private static void HarborInfo()
         {
-            Console.WriteLine(RejectedBoats.Count);
+          
+            Console.WriteLine("Antal avvisade Båtar: " + RejectedBoats.Count);
+            TotalInfo();
+            ResetAllInfo();
+          
+            
         }
+        private static void TotalInfo()//1:Totalvikt, 2:totalt antal lediga platser3:Medeltal av hastigheten
+        {
+            int totalWeight = 0;
+            int totalFreeSpots = 0;
+            int averageMaxSpeed = 0;
+            int totalBoatsForAverage = 0;
+            int AmountOfRowBoats = 0;
+            int AmountOfMotorBoats = 0;
+            int AmountOfSailBoats = 0;
+            int AmountOfCargoShips = 0;
+
+
+            foreach (Dock dock in Docks)
+            {
+                foreach (Boat boat in dock.Boats)
+                {
+                    if(boat != null)
+                    {
+                        if (boat.Info == false)
+                        {
+                            totalWeight += boat.Weight;
+                            averageMaxSpeed += boat.MaxSpeed;
+                            totalBoatsForAverage++;
+                            boat.Info = true;
+                            if (boat is RowBoat) AmountOfRowBoats++;
+                            if (boat is MotorBoat) AmountOfMotorBoats++;
+                            if (boat is SailBoat) AmountOfSailBoats++;
+                            if (boat is CargoShip) AmountOfCargoShips++;
+                        }
+                    }
+                    else if (boat == null )
+                    {
+                        totalFreeSpots +=1;
+                        break;
+                    }
+                }
+
+            }
+
+            Console.WriteLine("Totalvikt av alla båtar i hamnen: " + totalWeight + "kg");
+            Console.WriteLine("Antal lediga platser: " + totalFreeSpots);
+            Console.WriteLine("Medeltal av båtarnas Maxhastighet(Avrundat): " + averageMaxSpeed/totalBoatsForAverage + " knop\n");
+            Console.WriteLine("Antal roddbåtar: " + AmountOfRowBoats + "\tAntal motorbåtar: " + AmountOfMotorBoats);
+            Console.WriteLine("Antal Segelbåtar : " + AmountOfSailBoats + "\tAntal Lastfartyg : " + AmountOfCargoShips);
+        }
+
+        private static void ResetAllInfo()
+        {
+            foreach (Dock dock in Docks)
+            {
+                foreach (Boat boat in dock.Boats)
+                {
+                    if (boat != null)
+                    {
+                        boat.Info = false;
+                    }
+                }
+            }
+        }
+
     }
 }
 

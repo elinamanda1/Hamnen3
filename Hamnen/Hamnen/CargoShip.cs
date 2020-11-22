@@ -18,6 +18,8 @@ namespace Hamnen
             MaxSpeed = RandomizeNumbers(0, 21);
             Containers = RandomizeNumbers(0, 501);
             Value = 1;
+            HasBeenLoweredToday = false;
+            Info = false;
         }
         public override string ToString()
         {

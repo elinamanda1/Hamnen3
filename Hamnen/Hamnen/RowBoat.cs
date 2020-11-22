@@ -17,7 +17,9 @@ namespace Hamnen
             MaxSpeed = RandomizeNumbers(0, 4);
             MaxPassengers = RandomizeNumbers(1, 7);
             Value = 0.5;
-        }
+            HasBeenLoweredToday = false;
+            Info = false;
+    }
         public override string ToString()
         {
             return $"\t{Type}\t\t{Identity}\t\t{Weight} kg\t\t{MaxSpeed} knop\t\t\tMax antal passagerare: {MaxPassengers}";
